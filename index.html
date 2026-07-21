@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bevi Academy — Partner Technician Certification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --blue:#246EFF;--navy:#03257E;--lightblue:#D7E5FF;--aqua:#00C2D1;
+    --bg:#F5F8FF;--surface:#FFFFFF;--ink:#0A1B3D;--muted:#5A6B8C;--line:#E3ECFB;--amber:#F0A500;
+    --radius:8px;--shadow:0 1px 2px rgba(3,37,126,.06),0 8px 24px rgba(3,37,126,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Open Sans",system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 24px 72px}
+
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .drop{width:34px;height:34px;flex:0 0 auto;background:linear-gradient(160deg,var(--blue),var(--navy));border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:inset 0 -3px 6px rgba(255,255,255,.25)}
+  .brand h1{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:22px;letter-spacing:-.01em;margin:0;color:var(--navy);line-height:1.1}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+  .controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .asof{color:var(--muted);font-size:13px}
+  .asof b{color:var(--navy);font-weight:700}
+  .toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow)}
+  .toggle button{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:14px;border:0;background:transparent;color:var(--muted);padding:8px 20px;border-radius:999px;cursor:pointer}
+  .toggle button.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(36,110,255,.35)}
+  .toggle button:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  .people-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .filter{font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:999px;padding:9px 16px;min-width:240px;background:var(--surface);color:var(--ink)}
+  .filter:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+  .pcount{color:var(--muted);font-weight:700}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .pill.cert{background:var(--lightblue);color:var(--navy)}
+  .pill.prog{background:#FFF2D6;color:#8A5A00}
+  .pill.new{background:#EEF1F6;color:#67718A}
+
+  .srcbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--muted)}
+  .srcbar b{color:var(--navy)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#C9D6EE;margin-right:6px;vertical-align:middle}
+  .dot.on{background:var(--blue)}
+  .btn{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:13px;border:1px solid var(--blue);color:var(--blue);background:#fff;border-radius:999px;padding:7px 16px;cursor:pointer}
+  .btn:hover{background:var(--blue);color:#fff}
+  input[type=file]{display:none}
+
+  .drop-load{border:2px dashed var(--lightblue);background:linear-gradient(180deg,#FBFDFF,#F3F7FF);border-radius:var(--radius);padding:48px 28px;text-align:center;color:var(--muted)}
+  .drop-load.drag{border-color:var(--blue);background:#EAF1FF}
+  .drop-load h3{font-family:"Plus Jakarta Sans",sans-serif;color:var(--navy);font-size:18px;margin:0 0 6px}
+  .drop-load p{margin:0}
+
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}
+  .kpi.k2::before{background:var(--aqua)}
+  .kpi.k3::before{background:var(--navy)}
+  .kpi .label{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .kpi .num{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:38px;color:var(--navy);line-height:1;margin:10px 0 6px;font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:13px;color:var(--muted)}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
+  .panel h2{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:16px;color:var(--navy);margin:0 0 4px}
+  .panel .cap{color:var(--muted);font-size:13px;margin:0 0 18px}
+
+  .funnel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;align-items:stretch}
+  .stage{position:relative;padding:6px 10px 6px 0}
+  .stage .bar{height:96px;border-radius:6px;display:flex;flex-direction:column;justify-content:center;padding:0 16px;color:#fff;position:relative}
+  .stage:nth-child(1) .bar{background:linear-gradient(120deg,#6FA0FF,#246EFF)}
+  .stage:nth-child(2) .bar{background:linear-gradient(120deg,#3F86FF,#1E5AE0)}
+  .stage:nth-child(3) .bar{background:linear-gradient(120deg,#1E5AE0,#0B3BB0)}
+  .stage:nth-child(4) .bar{background:linear-gradient(120deg,#0B3BB0,var(--navy))}
+  .stage .stagenum{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+  .stage .stagelbl{font-size:12.5px;font-weight:600;opacity:.92;margin-top:4px}
+  .stage .arrow{position:absolute;right:2px;top:50%;transform:translateY(-50%);z-index:2;color:var(--muted);font-size:18px}
+  .stage:last-child{padding-right:0}
+  .stage:last-child .arrow{display:none}
+  .stage .drop-pct{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+  .stage .drop-pct b{color:var(--navy)}
+
+  .tablewrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line)}
+  th{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  .metercell{min-width:110px}
+  .meter{height:8px;background:var(--lightblue);border-radius:4px;overflow:hidden;margin-top:5px}
+  .meter span{display:block;height:100%;background:var(--blue);border-radius:4px}
+  .muted-row td{color:var(--muted)}
+  .step{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:700;font-family:"Plus Jakarta Sans",sans-serif}
+  tr.divider td{background:linear-gradient(90deg,#EAF1FF,#F3F7FF);border-top:2px solid var(--blue);border-bottom:2px solid var(--blue);color:var(--navy);font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:8px 10px}
+
+  /* weekly bars */
+  .wkrow{display:grid;grid-template-columns:120px 1fr auto;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .wkrow:last-child{border-bottom:0}
+  .wklabel{font-weight:600;color:var(--navy);font-size:13.5px}
+  .wktrack{background:#EEF4FF;border-radius:5px;height:26px;position:relative;overflow:hidden}
+  .wkfill{height:100%;background:linear-gradient(120deg,#3F86FF,#1E5AE0);border-radius:5px;min-width:2px}
+  .wkval{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+  .wkval small{font-weight:600;color:var(--muted);font-family:"Open Sans"}
+
+  .view{display:none}
+  .view.active{display:block}
+
+  .soon{border:2px dashed var(--lightblue);background:linear-gradient(180deg,#FBFDFF,#F3F7FF);border-radius:var(--radius);padding:28px;text-align:center;color:var(--muted)}
+  .soon h3{font-family:"Plus Jakarta Sans",sans-serif;color:var(--navy);font-size:16px;margin:0 0 8px}
+  .soon p{margin:4px auto;max-width:540px}
+
+  footer.legend{color:var(--muted);font-size:12.5px;margin-top:8px}
+  footer.legend b{color:var(--navy)}
+  .hidden{display:none!important}
+
+  @media (max-width:860px){
+    .kpis{grid-template-columns:1fr}
+    .funnel{grid-template-columns:repeat(2,1fr);gap:10px}
+    .stage .arrow{display:none}
+    .wkrow{grid-template-columns:96px 1fr auto;gap:10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="drop" aria-hidden="true"></div>
+      <div>
+        <h1>Bevi Academy</h1>
+        <p>Partner Technician Certification</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="asof">Data as of <b id="asof">—</b></div>
+      <div class="toggle" role="tablist" aria-label="Report view">
+        <button id="btnTotal" class="active" role="tab" aria-selected="true">Total</button>
+        <button id="btnWeekly" role="tab" aria-selected="false">Weekly</button>
+        <button id="btnPeople" role="tab" aria-selected="false">Individuals</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="srcbar">
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <span><span class="dot" id="dot"></span><span id="stat">Waiting for the latest report…</span></span>
+      <span><span class="dot" id="dotL"></span><span id="statL">logins not loaded</span></span>
+    </div>
+  </div>
+
+  <div id="dropLoad" class="drop-load">
+    <h3>No data loaded yet</h3>
+    <p>The dashboard updates automatically each morning from the scheduled Absorb report.</p>
+  </div>
+
+  <div id="content" class="hidden">
+
+  <!-- ===================== TOTAL VIEW ===================== -->
+  <section id="viewTotal" class="view active">
+    <div class="kpis">
+      <div class="kpi k1"><div class="label">Technicians enrolled</div><div class="num" id="kEnrolled">—</div><div class="sub">registered across partners</div></div>
+      <div class="kpi k2"><div class="label">Certified</div><div class="num" id="kCertified">—</div><div class="sub">completed the full curriculum</div></div>
+      <div class="kpi k3"><div class="label">Completion rate</div><div class="num" id="kCompletion">—</div><div class="sub">of course enrollments completed</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Certification pipeline</h2>
+      <div class="funnel" id="funnel"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Curriculum progression</h2>
+      <p class="cap">Partner technicians who have completed each course, in sequence. The halfway line falls after Countertop 1.5 Installation.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>#</th><th>Course</th><th class="num">Enrolled</th><th class="num">In progress</th><th class="num">Completed</th><th class="metercell">Completion</th></tr></thead>
+          <tbody id="currBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Partner engagement</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Partner</th><th class="num">Technicians</th><th class="num">Started</th><th class="num">Certified</th><th class="metercell">Completion</th></tr></thead>
+          <tbody id="partnerBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WEEKLY VIEW ===================== -->
+  <section id="viewWeekly" class="view">
+    <div class="kpis">
+      <div class="kpi k1"><div class="label">Logged in this week</div><div class="num" id="wActive">—</div><div class="sub">signed into Academy</div></div>
+      <div class="kpi k2"><div class="label">Completions this week</div><div class="num" id="wThis">—</div><div class="sub">courses finished</div></div>
+      <div class="kpi k3"><div class="label">Newly certified this week</div><div class="num" id="wCert">—</div><div class="sub">finished the full curriculum</div></div>
+    </div>
+    <div class="panel">
+      <h2>Course completions by week</h2>
+      <p class="cap">Dated from each enrollment's completion date. Enrollment/start dates aren't in this export, so this tracks finishes, not sign-ups.</p>
+      <div id="wkBars"></div>
+    </div>
+  </section>
+
+  <!-- ===================== INDIVIDUALS VIEW ===================== -->
+  <section id="viewPeople" class="view">
+    <div class="panel">
+      <div class="people-head">
+        <div>
+          <h2>Individuals signed up</h2>
+          <p class="cap">Every partner technician enrolled, with how many of their courses they've completed. <span id="peopleCount" class="pcount"></span></p>
+        </div>
+        <input id="peopleFilter" class="filter" type="text" placeholder="Filter by name or partner…" aria-label="Filter individuals" />
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>First name</th><th>Last name</th><th>Department</th><th class="num">Completed</th><th class="metercell">Progress</th><th>Status</th></tr></thead>
+          <tbody id="peopleBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <footer class="legend"><span id="footNote">Partner-technician view. Internal Bevi and admin accounts are excluded.</span></footer>
+
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — edit to change rollups. Single source: the
+   Absorb "Online Course Activities" export.
+   ========================================================= */
+const CSV_DEFAULT  = "Online_Course_Activities.csv"; // core source — powers everything
+const CSV_LEARNERS = "Learner_Progress_and_Activity.csv"; // optional — adds the "logged in" numbers
+
+const isExcluded = s => s === "" || s === "nan" || s.startsWith("bevi") || s === "all departments" || s === "all partners";
+const PARTNER_RULES = [
+  ["AVI",             s => /\bavi\b/.test(s) || s.includes("avi foodsystems")],
+  ["Aramark",         s => s.includes("aramark")],
+  ["Canteen",         s => s.includes("canteen")],
+  ["Daiohs",          s => s.includes("daiohs") || s.includes("first choice")],
+  ["Quench",          s => s.includes("quench")],
+  ["Sodexo/Inreach", s => s.includes("sodexo") || s.includes("inreach")],
+  ["Royal Cup",       s => s.includes("royal cup")]
+];
+const PARTNER_ORDER = ["AVI","Aramark","Canteen","Daiohs","Quench","Sodexo/Inreach","Royal Cup","Independents"];
+
+const WELCOME = "Welcome to the Bevi Academy: Technician Certification Pathway!";
+// Curriculum order (edit to match Absorb). Halfway line is drawn AFTER the named course.
+const CORE_SEQUENCE = [
+  WELCOME,
+  "Standup 2.0 Overview 101",
+  "Standup 2.0 Installation 101",
+  "Countertop 1.5 Overview 101",
+  "Countertop 1.5 Installation 101",
+  "Consumable Swaps 101",
+  "Preventative Maintenance 101",
+  "Decommissioning 101",
+  "The Well 101"
+];
+const HALFWAY_AFTER = "Countertop 1.5 Installation 101";
+/* ========================================================= */
+
+const $ = id => document.getElementById(id);
+const pct = v => Math.round(v*100) + "%";
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const SKILL = CORE_SEQUENCE.filter(c => c !== WELCOME);
+const halfIdx = SKILL.indexOf(HALFWAY_AFTER);
+const FIRST_HALF = SKILL.slice(0, halfIdx + 1);
+
+function partnerOf(dept){
+  const s = (dept==null?"":String(dept)).trim().toLowerCase();
+  if(isExcluded(s)) return null;
+  for(const [name,test] of PARTNER_RULES){ if(test(s)) return name; }
+  return "Independents";
+}
+const parseDate = s => { const d=new Date(String(s||"").trim().replace(" ","T")); return isNaN(d)?null:d; };
+function weekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
+function weekLabel(mon){ const sun=new Date(mon); sun.setDate(sun.getDate()+6);
+  const m=d=>d.toLocaleDateString("en-US",{month:"short"}); 
+  return sun.getMonth()===mon.getMonth() ? `${m(mon)} ${mon.getDate()}–${sun.getDate()}` : `${m(mon)} ${mon.getDate()} – ${m(sun)} ${sun.getDate()}`;
+}
+
+function compute(rows){
+  // group by person
+  const people = new Map(); let excluded=0, maxDate=null;
+  for(const r of rows){
+    const p = partnerOf(r["DEPARTMENT"]);
+    const course = (r["COURSE NAME"]||"").trim();
+    if(!course) continue;
+    if(p===null){ excluded++; continue; }
+    const first=(r["FIRST NAME"]||"").trim(), last=(r["LAST NAME"]||"").trim(), dept=(r["DEPARTMENT"]||"").trim();
+    const key = first+"|"+last+"|"+dept;
+    if(!people.has(key)) people.set(key,{first,last,dept,partner:p,done:new Set(),started:false,enrollments:0,completed:0});
+    const rec = people.get(key);
+    rec.enrollments++;
+    const st = (r["STATUS"]||"").trim();
+    if(st!=="Not Started") rec.started = true;
+    if(st==="Complete"){
+      rec.done.add(course); rec.completed++;
+      const dc = parseDate(r["DATE COMPLETED"]);
+      if(dc){ rec.lastDone = (!rec.lastDone||dc>rec.lastDone)?dc:rec.lastDone; if(!maxDate||dc>maxDate) maxDate=dc; }
+    }
+    const la = parseDate(r["DATE LAST ACCESSED"]); if(la && (!maxDate||la>maxDate)) maxDate=la;
+  }
+
+  const hasAll = (set,list) => list.every(c=>set.has(c));
+  let enrolled=0, started=0, halfway=0, certified=0, totEnr=0, totComp=0;
+  const byPartner={}; PARTNER_ORDER.forEach(n=>byPartner[n]={techs:0,started:0,cert:0,enr:0,comp:0});
+  const weekly=new Map(); // wkTime -> {comp, cert}
+
+  const roster=[];
+  for(const rec of people.values()){
+    enrolled++;
+    const b=byPartner[rec.partner];
+    b.techs++; b.enr+=rec.enrollments; b.comp+=rec.completed;
+    totEnr+=rec.enrollments; totComp+=rec.completed;
+    if(rec.started){ started++; b.started++; }
+    const isHalf = hasAll(rec.done,FIRST_HALF);
+    if(isHalf) halfway++;
+    const isCert = hasAll(rec.done,SKILL);
+    if(isCert){ certified++; b.cert++;
+      if(rec.lastDone){ const w=+weekStart(rec.lastDone); const e=weekly.get(w)||{comp:0,cert:0}; e.cert++; weekly.set(w,e); }
+    }
+    roster.push({first:rec.first,last:rec.last,partner:rec.partner,dept:rec.dept,completed:rec.completed,enrolled:rec.enrollments,started:rec.started,halfway:isHalf,certified:isCert});
+  }
+
+  // weekly completions from every completed enrollment
+  for(const r of rows){
+    if(partnerOf(r["DEPARTMENT"])===null) continue;
+    if((r["STATUS"]||"").trim()!=="Complete") continue;
+    const dc=parseDate(r["DATE COMPLETED"]); if(!dc) continue;
+    const w=+weekStart(dc); const e=weekly.get(w)||{comp:0,cert:0}; e.comp++; weekly.set(w,e);
+  }
+
+  // per course progression (partner-filtered)
+  const cmap={}; CORE_SEQUENCE.forEach(c=>cmap[c]={enr:0,inprog:0,comp:0});
+  for(const r of rows){
+    if(partnerOf(r["DEPARTMENT"])===null) continue;
+    const c=(r["COURSE NAME"]||"").trim(); if(!cmap[c]) continue;
+    cmap[c].enr++; const st=(r["STATUS"]||"").trim();
+    if(st==="Complete") cmap[c].comp++; else if(st==="In Progress") cmap[c].inprog++;
+  }
+
+  const weeks=[...weekly.entries()].sort((a,b)=>a[0]-b[0])
+    .map(([t,v])=>({t:+t,label:weekLabel(new Date(+t)),comp:v.comp,cert:v.cert}));
+
+  return {enrolled,started,halfway,certified,completionRate:totEnr?totComp/totEnr:0,
+    byPartner,excluded,cmap,weeks,maxDate,roster};
+}
+
+function lerpColor(a,b,t){const p=(h,i)=>parseInt(h.slice(i,i+2),16);
+  const c=[0,2,4].map(i=>Math.round(p(a,i+1)+(p(b,i+1)-p(a,i+1))*t));
+  return "#"+c.map(v=>v.toString(16).padStart(2,"0")).join("");}
+
+function computeLearners(rows){
+  let enrolled=0, loggedIn=0; const weekly=new Map();
+  for(const r of rows){
+    if(partnerOf(r["Department: Name"])===null) continue;
+    const enr=parseFloat(String(r["Course Enrollment Summary: Enrollment Count"]||"0").replace(/,/g,""))||0;
+    if(enr<=0) continue;
+    enrolled++;
+    const li=parseDate(r["Login Summary: Last Logged In"]);
+    if(li){ loggedIn++; const w=+weekStart(li); weekly.set(w,(weekly.get(w)||0)+1); }
+  }
+  return {enrolled, loggedIn, weekly};
+}
+
+let A=null, LRN=null, LAST_UPDATED="";
+
+function renderAll(){
+  $("dot").classList.toggle("on",!!A);
+  $("dotL").classList.toggle("on",!!LRN);
+  $("statL").innerHTML = LRN ? `<b>${LRN.loggedIn}</b> logged in` : "logins not loaded";
+  if(!A){ $("stat").innerHTML="Waiting for the latest report…"; return; }
+  $("stat").innerHTML=`<b>${A.enrolled}</b> partner technicians`;
+  $("dropLoad").classList.add("hidden"); $("content").classList.remove("hidden");
+  const d=A;
+  $("asof").textContent = LAST_UPDATED ? LAST_UPDATED
+    : (d.maxDate ? d.maxDate.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—");
+  $("kEnrolled").textContent=d.enrolled;
+  $("kCertified").textContent=d.certified;
+  $("kCompletion").textContent=pct(d.completionRate);
+
+  const stages=[{lbl:"Enrolled",val:d.enrolled}];
+  if(LRN) stages.push({lbl:"Logged in",val:LRN.loggedIn});
+  stages.push({lbl:"Started",val:d.started},{lbl:"Reached halfway",val:d.halfway},{lbl:"Certified",val:d.certified});
+  const n=stages.length;
+  $("funnel").innerHTML=stages.map((s,i)=>{
+    const prev=i>0?stages[i-1].val:null;
+    const conv=(prev&&prev>0)?`<div class="drop-pct"><b>${pct(s.val/prev)}</b> of previous</div>`:`<div class="drop-pct">&nbsp;</div>`;
+    const col=lerpColor("#4C86FF","#03257E", n>1?i/(n-1):0);
+    return `<div class="stage"><div class="bar" style="background:${col}"><div class="stagenum">${s.val}</div><div class="stagelbl">${s.lbl}</div></div>${conv}${i<n-1?'<div class="arrow">›</div>':''}</div>`;
+  }).join("");
+
+  const crows=[];
+  CORE_SEQUENCE.forEach((name,i)=>{
+    const c=d.cmap[name]; const rate=c.enr?c.comp/c.enr:0;
+    crows.push(`<tr><td class="step">${i+1}</td><td>${name}</td><td class="num">${c.enr}</td><td class="num">${c.inprog}</td><td class="num">${c.comp}</td><td class="metercell">${pct(rate)}<div class="meter"><span style="width:${Math.min(rate*100,100)}%"></span></div></td></tr>`);
+    if(name===HALFWAY_AFTER) crows.push(`<tr class="divider"><td colspan="6">Halfway point · first half of the curriculum complete</td></tr>`);
+  });
+  $("currBody").innerHTML=crows.join("");
+
+  $("partnerBody").innerHTML=PARTNER_ORDER.map(nm=>{
+    const b=d.byPartner[nm]; const rate=b.enr?b.comp/b.enr:0; const cls=b.techs===0?' class="muted-row"':'';
+    return `<tr${cls}><td>${nm}</td><td class="num">${b.techs}</td><td class="num">${b.started}</td><td class="num">${b.cert}</td><td class="metercell">${pct(rate)}<div class="meter"><span style="width:${Math.min(rate*100,100)}%"></span></div></td></tr>`;
+  }).join("");
+
+  const last=d.weeks[d.weeks.length-1];
+  let activeThis="—";
+  if(LRN && LRN.weekly.size){ const lw=Math.max(...LRN.weekly.keys()); activeThis=LRN.weekly.get(lw); }
+  $("wActive").textContent=activeThis;
+  $("wThis").textContent=last?last.comp:0;
+  $("wCert").textContent=last?last.cert:0;
+  const maxComp=Math.max(1,...d.weeks.map(w=>w.comp));
+  $("wkBars").innerHTML = d.weeks.length ? d.weeks.map(w=>`
+    <div class="wkrow"><div class="wklabel">${w.label}</div><div class="wktrack"><div class="wkfill" style="width:${Math.max(w.comp/maxComp*100,2)}%"></div></div><div class="wkval">${w.comp}${w.cert?` <small>· ${w.cert} cert</small>`:''}</div></div>`).join("")
+    : `<div class="soon"><h3>No dated completions yet</h3><p>Completions will appear here week by week as technicians finish courses.</p></div>`;
+
+  $("footNote").innerHTML=`Partner-technician view. <b>${d.excluded}</b> internal Bevi and admin/test enrollments excluded. Completion rate = enrollments completed ÷ total enrollments. Certified = completed all ${SKILL.length} Core courses.${LRN?' “Logged in” = partner technicians who have signed in at least once.':''}`;
+
+  renderPeople(d);
+}
+
+let rosterFilter="";
+function renderPeople(d){
+  const q=rosterFilter.trim().toLowerCase();
+  let list=d.roster.slice().sort((a,b)=>
+    (b.certified-a.certified) || (b.completed-a.completed) || a.last.localeCompare(b.last) || a.first.localeCompare(b.first));
+  if(q) list=list.filter(p=>(p.first+" "+p.last+" "+p.dept).toLowerCase().includes(q));
+  $("peopleCount").textContent = `${list.length}${q&&list.length!==d.roster.length?` of ${d.roster.length}`:""} ${list.length===1?"person":"people"}`;
+  $("peopleBody").innerHTML = list.map(p=>{
+    const rate=p.enrolled?p.completed/p.enrolled:0;
+    const badge = p.certified ? `<span class="pill cert">Certified</span>`
+      : p.started ? `<span class="pill prog">In progress</span>`
+      : `<span class="pill new">Not started</span>`;
+    return `<tr><td>${esc(p.first)}</td><td>${esc(p.last)}</td><td>${esc(p.dept)}</td>`+
+      `<td class="num">${p.completed} / ${p.enrolled}</td>`+
+      `<td class="metercell">${pct(rate)}<div class="meter"><span style="width:${Math.min(rate*100,100)}%"></span></div></td>`+
+      `<td>${badge}</td></tr>`;
+  }).join("") || `<tr class="muted-row"><td colspan="6" style="text-align:center">No matches.</td></tr>`;
+}
+
+/* ---------- loading ---------- */
+function ingest(text){
+  const parsed=Papa.parse(text,{header:true,skipEmptyLines:true,transformHeader:h=>h.replace(/^\uFEFF/,"").replace(/^"|"$/g,"").trim()});
+  const f=parsed.meta.fields||[];
+  if(f.includes("COURSE NAME") && f.includes("STATUS")){ A=compute(parsed.data); renderAll(); }
+  else if(f.includes("User: Full Name") && f.includes("Login Summary: Last Logged In")){ LRN=computeLearners(parsed.data); renderAll(); }
+}
+
+/* ---------- data source ----------
+   Published by the Apps Script pipeline as data.json, sitting next to this
+   page on GitHub Pages. Shape:
+     { "lastUpdated": "Jul 21, 2026",
+       "mainCsv":     "<raw Online Course Activities CSV text>",
+       "learnersCsv": "<raw Learner Progress CSV text>"  // optional }
+   Fetched on load; refreshes automatically whenever the pipeline rewrites the file. */
+(function(){
+  fetch("./data.json", {cache:"no-store"})
+    .then(r => { if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(d => {
+      LAST_UPDATED = d.lastUpdated || "";
+      if(d.mainCsv)     ingest(d.mainCsv);
+      if(d.learnersCsv) ingest(d.learnersCsv);
+      if(!d.mainCsv){ $("stat").textContent = "data.json loaded, but it has no report data yet."; }
+    })
+    .catch(e => {
+      console.error("Could not load data.json:", e);
+      $("stat").innerHTML = "Couldn't load the latest report (data.json).";
+    });
+})();
+
+/* ---------- view toggle ---------- */
+const tabs={total:$("btnTotal"),weekly:$("btnWeekly"),people:$("btnPeople")};
+const views={total:$("viewTotal"),weekly:$("viewWeekly"),people:$("viewPeople")};
+function show(which){
+  Object.keys(views).forEach(k=>{
+    const on = (k===which);
+    views[k].classList.toggle("active",on);
+    tabs[k].classList.toggle("active",on);
+    tabs[k].setAttribute("aria-selected",on);
+  });
+}
+tabs.total.addEventListener("click",()=>show("total"));
+tabs.weekly.addEventListener("click",()=>show("weekly"));
+tabs.people.addEventListener("click",()=>show("people"));
+$("peopleFilter").addEventListener("input",e=>{ rosterFilter=e.target.value; if(A) renderPeople(A); });
+</script>
+</body>
+</html>
